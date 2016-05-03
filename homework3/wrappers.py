@@ -23,3 +23,175 @@ try:
 except OSError:
     raise OSError("You need to compile your homework library using 'make'.")
 
+
+def trapz_serial(fvals, x):
+    # check dimensions
+    N = len(fvals)
+    if N != len(x):
+        raise ValueError('fvals and x must have same length.')
+
+    # ensure contiguous data
+    fvals = numpy.ascontiguousarray(numpy.array(fvals, dtype=numpy.double))
+    x = numpy.ascontiguousarray(numpy.array(x, dtype=numpy.double))
+
+    # set function types and evaluate
+    try:
+        f = homework3library.trapz_serial
+        f.restype = c_double
+        f.argtypes = [c_void_p, c_void_p, c_int]
+        output = f(fvals.ctypes.data, x.ctypes.data, N)
+    except AttributeError:
+        raise AttributeError("Something wrong happened when calling the C "
+                             "library function.")
+    return output
+
+def trapz_parallel(fvals, x, num_threads=4):
+    # check dimensions
+    N = len(fvals)
+    if N != len(x):
+        raise ValueError('fvals and x must have same length.')
+
+    # ensure contiguous data
+    fvals = numpy.ascontiguousarray(numpy.array(fvals, dtype=numpy.double))
+    x = numpy.ascontiguousarray(numpy.array(x, dtype=numpy.double))
+
+    # set function types and evaluate
+    try:
+        f = homework3library.trapz_parallel
+        f.restype = c_double
+        f.argtypes = [c_void_p, c_void_p, c_int, c_int]
+        output = f(fvals.ctypes.data, x.ctypes.data, N, num_threads)
+    except AttributeError:
+        raise AttributeError("Something wrong happened when calling the C "
+                             "library function.")
+    return output
+
+def time_trapz_parallel(fvals, x, num_threads=4, number=5):
+    r""" Returns the amount of time it takes to perform parallel trapezoidal rule.
+
+    Optionally specify number of threads to use in omp as well as the number of
+    times to repeat this timing in order to computer averages.
+
+    Parameters
+    ----------
+    fvals : Numpy array
+        The function values along the `x` range.
+    x : Numpy array
+        The x-points at which the function is evaluated.
+    num_threads : int
+        (Default: 4) The number of threads to spawn when computing the integral.
+    number : int
+        (Default: 5) Number of times to compute the integral. Time returned is
+        the equal to the average across these runs.
+
+    """
+    # check dimensions
+    N = len(fvals)
+    if N != len(x):
+        raise ValueError('fvals and x must have same length.')
+
+    # ensure contiguous data
+    fvals = numpy.ascontiguousarray(numpy.array(fvals, dtype=numpy.double))
+    x = numpy.ascontiguousarray(numpy.array(x, dtype=numpy.double))
+
+    # set function types and evaluate
+    try:
+        f = homework3library.time_trapz_parallel
+        f.restype = c_double
+        f.argtypes = [c_void_p, c_void_p, c_int, c_int]
+
+        # run `number` times and compute the average
+        output = 0.0
+        for _ in xrange(number):
+            output += f(fvals.ctypes.data, x.ctypes.data, N, num_threads)
+        output /= number
+    except AttributeError:
+        raise AttributeError("Something wrong happened when calling the C "
+                             "library function.")
+    return output
+
+def simps_serial(fvals, x):
+    # check dimensions
+    N = len(fvals)
+    if N != len(x):
+        raise ValueError('fvals and x must have same length.')
+
+    # ensure contiguous data
+    fvals = numpy.ascontiguousarray(numpy.array(fvals, dtype=numpy.double))
+    x = numpy.ascontiguousarray(numpy.array(x, dtype=numpy.double))
+
+    # set function types and evaluate
+    try:
+        f = homework3library.simps_serial
+        f.restype = c_double
+        f.argtypes = [c_void_p, c_void_p, c_int]
+        output = f(fvals.ctypes.data, x.ctypes.data, N)
+    except AttributeError:
+        raise AttributeError("Something wrong happened when calling the C "
+                             "library function.")
+    return output
+
+def simps_parallel(fvals, x, num_threads=4):
+    # check dimensions
+    N = len(fvals)
+    if N != len(x):
+        raise ValueError('fvals and x must have same length.')
+
+    # ensure contiguous data
+    fvals = numpy.ascontiguousarray(numpy.array(fvals, dtype=numpy.double))
+    x = numpy.ascontiguousarray(numpy.array(x, dtype=numpy.double))
+
+    # set function types and evaluate
+    try:
+        f = homework3library.simps_parallel
+        f.restype = c_double
+        f.argtypes = [c_void_p, c_void_p, c_int, c_int]
+        output = f(fvals.ctypes.data, x.ctypes.data, N, num_threads)
+    except AttributeError:
+        raise AttributeError("Something wrong happened when calling the C "
+                             "library function.")
+    return output
+
+def time_simps_parallel(fvals, x, num_threads=4, number=5):
+    r""" Returns the amount of time it takes to perform parallel trapezoidal rule.
+
+    Optionally specify number of threads to use in omp as well as the number of
+    times to repeat this timing in order to computer averages.
+
+    Parameters
+    ----------
+    fvals : Numpy array
+        The function values along the `x` range.
+    x : Numpy array
+        The x-points at which the function is evaluated.
+    num_threads : int
+        (Default: 4) The number of threads to spawn when computing the integral.
+    number : int
+        (Default: 5) Number of times to compute the integral. Time returned is
+        the equal to the average across these runs.
+
+    """
+    # check dimensions
+    N = len(fvals)
+    if N != len(x):
+        raise ValueError('fvals and x must have same length.')
+
+    # ensure contiguous data
+    fvals = numpy.ascontiguousarray(numpy.array(fvals, dtype=numpy.double))
+    x = numpy.ascontiguousarray(numpy.array(x, dtype=numpy.double))
+
+    # set function types and evaluate
+    try:
+        f = homework3library.time_simps_parallel
+        f.restype = c_double
+        f.argtypes = [c_void_p, c_void_p, c_int, c_int]
+
+        # run `number` times and compute the average
+        output = 0.0
+        for _ in xrange(number):
+            output += f(fvals.ctypes.data, x.ctypes.data, N, num_threads)
+        output /= number
+    except AttributeError:
+        raise AttributeError("Something wrong happened when calling the C "
+                             "library function.")
+    return output

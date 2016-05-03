@@ -1,7 +1,7 @@
 # compiler settings
-CC=gcc
-CFLAGS=-c -Wall -fPIC
-LDFLAGS=--shared
+CC=gcc-5
+CFLAGS=-c -Wall -fPIC -fopenmp -lm
+LDFLAGS=--shared -fopenmp
 
 # target
 LIBTARGET=libhomework3.so
