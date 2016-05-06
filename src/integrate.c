@@ -4,6 +4,7 @@ double trapz_serial(double* fvals, double* x, int N)
 {
   double integral = 0;
   double dx;
+
   for (int i=0; i<N-1; ++i)
     {
       dx = x[i+1] - x[i];
@@ -18,9 +19,8 @@ double trapz_serial(double* fvals, double* x, int N)
 double trapz_parallel(double* fvals, double* x, int N, int num_threads)
 {
   double integral = 0;
-  double dx, val;
+  double dx;
 
-  // parallel loop with reduction
   #pragma omp parallel for                        \
     shared(x,fvals)                               \
     private(dx)                                   \
@@ -39,10 +39,9 @@ double trapz_parallel(double* fvals, double* x, int N, int num_threads)
 
 double time_trapz_parallel(double* fvals, double* x, int N, int num_threads)
 {
-  double start = omp_get_wtime();
+  double end, start = omp_get_wtime();
   trapz_parallel(fvals, x, N, num_threads);
-  double end = omp_get_wtime();
-
+  end = omp_get_wtime();
   return (end - start);
 }
 
@@ -52,10 +51,10 @@ double simps_serial(double* fvals, double* x, int N)
   double integral = 0;
   double dx;
 
-  for (int i=1; i<N-1; i+=2)
+  for (int i=0; i<N-2; i+=2)
     {
-      dx = x[i+1] - x[i-1];
-      integral += dx * (fvals[i+1] + 4.0*fvals[i] + fvals[i-1]);
+      dx = x[i+2] - x[i];
+      integral += dx * (fvals[i+2] + 4.0*fvals[i+1] + fvals[i]);
     }
   integral *= 0.166666666666666666;
 
@@ -76,17 +75,15 @@ double simps_parallel(double* fvals, double* x, int N, int num_threads)
   double integral = 0;
   double dx;
 
-  // set number of threads
-  omp_set_num_threads(num_threads);
-
   #pragma omp parallel for                        \
     shared(x,fvals)                               \
     private(dx)                                   \
-    reduction(+:integral)
-  for (int i=1; i<N-1; i+=2)
+    reduction(+:integral)                         \
+    num_threads(num_threads)
+  for (int i=0; i<N-2; i+=2)
     {
-      dx = x[i+1] - x[i-1];
-      integral += dx * (fvals[i+1] + 4.0*fvals[i] + fvals[i-1]);
+      dx = x[i+2] - x[i];
+      integral += dx * (fvals[i+2] + 4.0*fvals[i+1] + fvals[i]);
     }
   integral *= 0.166666666666666666;
 
@@ -102,35 +99,36 @@ double simps_parallel(double* fvals, double* x, int N, int num_threads)
 }
 
 
-double time_simps_parallel(double* fvals, double* x, int N, int num_threads)
+double time_simps_parallel(double* fvals, double* x, int N, int num_threads,
+                           int repeat)
 {
-  double start = omp_get_wtime();
-  simps_parallel(fvals, x, N, num_threads);
-  double end = omp_get_wtime();
-
-  return (end - start);
+  double end, start = omp_get_wtime();
+  for (int i=0; i<repeat; ++i)
+    simps_parallel(fvals, x, N, num_threads);
+  end = omp_get_wtime();
+  return (end - start) / (double)repeat;
 }
 
 
-double simps_parallel_chunked(double* fvals, double* x, int N, int num_threads, int chunk_size)
+double simps_parallel_chunked(double* fvals, double* x, int N,
+                              int num_threads, int chunk_size)
 {
   double integral = 0;
   double dx;
 
-  // set number of threads and chunk size
-  omp_set_num_threads(num_threads);
-  if (chunk_size <= 0)
-    chunk_size = 1;
+  // set chunk_size > 0
+  chunk_size = (chunk_size <= 0 ? 1 : chunk_size);
 
   #pragma omp parallel for                        \
     shared(x,fvals)                               \
     private(dx)                                   \
-    shared(static,chunk_size)                     \
-    reduction(+:integral)
-  for (int i=1; i<N-1; i+=2)
+    reduction(+:integral)                         \
+    schedule(static,chunk_size)                   \
+    num_threads(num_threads)
+  for (int i=0; i<N-2; i+=2)
     {
-      dx = x[i+1] - x[i-1];
-      integral += dx * (fvals[i+1] + 4.0*fvals[i] + fvals[i-1]);
+      dx = x[i+2] - x[i];
+      integral += dx * (fvals[i+2] + 4.0*fvals[i+1] + fvals[i]);
     }
   integral *= 0.166666666666666666;
 
@@ -146,11 +144,13 @@ double simps_parallel_chunked(double* fvals, double* x, int N, int num_threads, 
 }
 
 
-double time_simps_parallel_chunked(double* fvals, double* x, int N, int num_threads, int chunk_size)
+double time_simps_parallel_chunked(double* fvals, double* x, int N,
+                                   int num_threads, int chunk_size,
+                                   int repeat)
 {
-  double start = omp_get_wtime();
-  simps_parallel_chunked(fvals, x, N, num_threads, chunk_size);
-  double end = omp_get_wtime();
-  
-  return (end - start);
+  double end, start = omp_get_wtime();
+  for (int i=0; i<repeat; ++i)
+    simps_parallel_chunked(fvals, x, N, num_threads, chunk_size);
+  end = omp_get_wtime();
+  return (end - start) / (double)repeat;
 }

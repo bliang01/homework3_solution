@@ -66,7 +66,7 @@ def trapz_parallel(fvals, x, num_threads=4):
                              "library function.")
     return output
 
-def time_trapz_parallel(fvals, x, num_threads=4, number=5):
+def time_trapz_parallel(fvals, x, num_threads=4, repeat=5):
     r""" Returns the amount of time it takes to perform parallel trapezoidal rule.
 
     Optionally specify number of threads to use in omp as well as the number of
@@ -80,7 +80,7 @@ def time_trapz_parallel(fvals, x, num_threads=4, number=5):
         The x-points at which the function is evaluated.
     num_threads : int
         (Default: 4) The number of threads to spawn when computing the integral.
-    number : int
+    repeat : int
         (Default: 5) Number of times to compute the integral. Time returned is
         the equal to the average across these runs.
 
@@ -98,13 +98,8 @@ def time_trapz_parallel(fvals, x, num_threads=4, number=5):
     try:
         f = homework3library.time_trapz_parallel
         f.restype = c_double
-        f.argtypes = [c_void_p, c_void_p, c_int, c_int]
-
-        # run `number` times and compute the average
-        output = 0.0
-        for _ in xrange(number):
-            output += f(fvals.ctypes.data, x.ctypes.data, N, num_threads)
-        output /= number
+        f.argtypes = [c_void_p, c_void_p, c_int, c_int, c_int]
+        output = f(fvals.ctypes.data, x.ctypes.data, N, num_threads, repeat)
     except AttributeError:
         raise AttributeError("Something wrong happened when calling the C "
                              "library function.")
@@ -152,7 +147,7 @@ def simps_parallel(fvals, x, num_threads=4):
                              "library function.")
     return output
 
-def time_simps_parallel(fvals, x, num_threads=4, number=5):
+def time_simps_parallel(fvals, x, num_threads=4, repeat=5):
     r""" Returns the amount of time it takes to perform parallel trapezoidal rule.
 
     Optionally specify number of threads to use in omp as well as the number of
@@ -166,7 +161,7 @@ def time_simps_parallel(fvals, x, num_threads=4, number=5):
         The x-points at which the function is evaluated.
     num_threads : int
         (Default: 4) The number of threads to spawn when computing the integral.
-    number : int
+    repeat : int
         (Default: 5) Number of times to compute the integral. Time returned is
         the equal to the average across these runs.
 
@@ -184,13 +179,75 @@ def time_simps_parallel(fvals, x, num_threads=4, number=5):
     try:
         f = homework3library.time_simps_parallel
         f.restype = c_double
-        f.argtypes = [c_void_p, c_void_p, c_int, c_int]
+        f.argtypes = [c_void_p, c_void_p, c_int, c_int, c_int]
 
         # run `number` times and compute the average
-        output = 0.0
-        for _ in xrange(number):
-            output += f(fvals.ctypes.data, x.ctypes.data, N, num_threads)
-        output /= number
+        output = f(fvals.ctypes.data, x.ctypes.data, N, num_threads, repeat)
+    except AttributeError:
+        raise AttributeError("Something wrong happened when calling the C "
+                             "library function.")
+    return output
+
+def simps_parallel_chunked(fvals, x, num_threads=4, chunk_size=1):
+    # check dimensions
+    N = len(fvals)
+    if N != len(x):
+        raise ValueError('fvals and x must have same length.')
+
+    # ensure contiguous data
+    fvals = numpy.ascontiguousarray(numpy.array(fvals, dtype=numpy.double))
+    x = numpy.ascontiguousarray(numpy.array(x, dtype=numpy.double))
+
+    # set function types and evaluate
+    try:
+        f = homework3library.simps_parallel_chunked
+        f.restype = c_double
+        f.argtypes = [c_void_p, c_void_p, c_int, c_int, c_int]
+        output = f(fvals.ctypes.data, x.ctypes.data, N, num_threads, chunk_size)
+    except AttributeError:
+        raise AttributeError("Something wrong happened when calling the C "
+                             "library function.")
+    return output
+
+def time_simps_parallel_chunked(fvals, x, num_threads=4, chunk_size=1, repeat=5):
+    r""" Returns the amount of time it takes to perform parallel trapezoidal rule.
+
+    Optionally specify number of threads to use in omp as well as the number of
+    times to repeat this timing in order to computer averages.
+
+    Parameters
+    ----------
+    fvals : Numpy array
+        The function values along the `x` range.
+    x : Numpy array
+        The x-points at which the function is evaluated.
+    chunk_size : int
+        (Default: 1) Specify the chunk size to use in the parallel for loop.
+    num_threads : int
+        (Default: 4) The number of threads to spawn when computing the integral.
+    repeat : int
+        (Default: 5) Number of times to compute the integral. Time returned is
+        the equal to the average across these runs.
+
+    """
+    # check dimensions
+    N = len(fvals)
+    if N != len(x):
+        raise ValueError('fvals and x must have same length.')
+
+    # ensure contiguous data
+    fvals = numpy.ascontiguousarray(numpy.array(fvals, dtype=numpy.double))
+    x = numpy.ascontiguousarray(numpy.array(x, dtype=numpy.double))
+
+    # set function types and evaluate
+    try:
+        f = homework3library.time_simps_parallel_chunked
+        f.restype = c_double
+        f.argtypes = [c_void_p, c_void_p, c_int, c_int, c_int, c_int]
+
+        # run `number` times and compute the average
+        output = f(fvals.ctypes.data, x.ctypes.data, N, num_threads,
+                   chunk_size, repeat)
     except AttributeError:
         raise AttributeError("Something wrong happened when calling the C "
                              "library function.")
