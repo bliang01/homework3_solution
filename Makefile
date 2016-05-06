@@ -15,6 +15,8 @@ INCLUDE=include
 # sources
 LIBSOURCES=$(SRC)/integrate.c
 LIBOBJECTS=$(LIBSOURCES:.c=.o)
+CTESTSSOURCES=ctests/*.c
+CTESTPROGRAMS=$(CTESTSOURCES:.c:.out)
 
 .PHONY: all lib clean
 
@@ -26,6 +28,14 @@ lib: $(LIBTARGET)
 
 test: lib
 	python test_homework3.py
+
+#
+#     $ make example.out
+#
+# copy format if you want to write more ctest files
+#
+example.out: ctests/example.c
+	$(CC) -Wl,-rpath,./lib -I$(INCLUDE) -Llib -lhomework3 -lm -fopenmp $< -o $@
 
 $(LIBTARGET): $(LIBOBJECTS)
 	$(CC) $(LDFLAGS) $(LIBOBJECTS) -o $(LIB)/$(LIBTARGET)

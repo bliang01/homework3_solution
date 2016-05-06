@@ -82,10 +82,12 @@ $ python test_homework3.py
 Run,
 
 ```
-$ make ctests
+$ make example.out
 ```
 
-to compile the scripts located in the directory `ctests`.
+to compile the script `ctests/example.c` into an executable called
+`example.out`. Copy the syntax of the corresponding make command if you would
+like to write more C scripts.
 
 
 ## Assignment
